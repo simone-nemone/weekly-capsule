@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Capsule Wardrobe Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            min-height: 60px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .optional-label {
+            color: #888;
+            font-size: 0.85em;
+            font-weight: normal;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        #results {
+            display: none;
+        }
+        
+        .day-card {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .day-header {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .weather-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .outfit-section {
+            margin-top: 10px;
+        }
+        
+        .outfit-section strong {
+            color: #555;
+        }
+        
+        .outfit-item {
+            color: #333;
+            margin-left: 10px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weekly Capsule Wardrobe Generator</h1>
+    <p class="subtitle">Get your 5-day work wardrobe based on weather forecast</p>
+    
+    <div class="container">
+        <div class="info-box">
+            <strong>Ready to use!</strong> API key configured for Bairnsdale, Victoria.
+        </div>
+        
+        <form id="wardrobeForm">
+            <div class="form-group">
+                <label for="location">Location</label>
+                <select id="location" required>
+                    <option value="Bairnsdale,VIC,AU" selected>Bairnsdale, VIC</option>
+                    <option value="Melbourne,VIC,AU">Melbourne, VIC</option>
+                    <option value="Geelong,VIC,AU">Geelong, VIC</option>
+                    <option value="Ballarat,VIC,AU">Ballarat, VIC</option>
+                    <option value="Bendigo,VIC,AU">Bendigo, VIC</option>
+                    <option value="Sale,VIC,AU">Sale, VIC</option>
+                    <option value="Traralgon,VIC,AU">Traralgon, VIC</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="dressCode">Work Dress Code</label>
+                <select id="dressCode" required>
+                    <option value="">Select dress code...</option>
+                    <option value="smart-casual" selected>Smart Casual</option>
+                    <option value="business-casual">Business Casual</option>
+                    <option value="business-formal">Business Formal</option>
+                    <option value="casual">Casual</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="customTops">
+                    Custom Tops <span class="optional-label">(optional - comma separated)</span>
+                </label>
+                <textarea id="customTops" placeholder="e.g., blouse, polo shirt, knit top"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="customBottoms">
+                    Custom Bottoms <span class="optional-label">(optional - comma separated)</span>
+                </label>
+                <textarea id="customBottoms" placeholder="e.g., black chinos, dark jeans"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="customLayers">
+                    Custom Layers <span class="optional-label">(optional - comma separated)</span>
+                </label>
+                <textarea id="customLayers" placeholder="e.g., cardigan, blazer"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="customOuterwear">
+                    Custom Outerwear <span class="optional-label">(optional - comma separated)</span>
+                </label>
+                <textarea id="customOuterwear" placeholder="e.g., raincoat, jacket"></textarea>
+            </div>
+            
+            <button type="submit">Generate My Wardrobe</button>
+        </form>
+    </div>
+    
+    <div id="results" class="container"></div>
+
+    <script>
+        // API KEY CONFIGURED
+        const API_KEY = '464727207e8481b8cd7ac35c02ea650d';
+        
+        // DEFAULT WARDROBE DATABASE
+        const defaultWardrobes = {
+            'smart-casual': {
+                tops: ['blouse', 'polo shirt', 'casual button-up', 'knit top', 'chambray shirt'],
+                bottoms: ['chinos', 'dark jeans', 'casual trousers'],
+                layers: ['cardigan', 'blazer', 'sweater', 'denim jacket'],
+                outerwear: ['raincoat', 'light jacket', 'trench coat']
+            },
+            'business-casual': {
+                tops: ['dress shirt', 'blouse', 'smart polo', 'tailored top', 'professional knit'],
+                bottoms: ['dress pants', 'tailored trousers', 'pencil skirt', 'dress chinos'],
+                layers: ['blazer', 'cardigan', 'sweater', 'vest'],
+                outerwear: ['trench coat', 'professional jacket', 'raincoat']
+            },
+            'business-formal': {
+                tops: ['dress shirt', 'formal blouse', 'business shirt', 'silk top', 'professional shell'],
+                bottoms: ['suit trousers', 'dress pants', 'formal skirt', 'tailored slacks'],
+                layers: ['suit jacket', 'blazer', 'formal cardigan'],
+                outerwear: ['overcoat', 'trench coat', 'professional raincoat']
+            },
+            'casual': {
+                tops: ['t-shirt', 'casual top', 'hoodie', 'flannel shirt', 'henley'],
+                bottoms: ['jeans', 'casual pants', 'comfortable trousers', 'shorts'],
+                layers: ['sweater', 'hoodie', 'casual jacket', 'flannel'],
+                outerwear: ['jacket', 'raincoat', 'windbreaker', 'puffer jacket']
+            }
+        };
+        
+        // FORM SUBMISSION HANDLER
+        document.getElementById('wardrobeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const location = document.getElementById('location').value;
+            const dressCode = document.getElementById('dressCode').value;
+            const resultsDiv = document.getElementById('results');
+            
+            // Show loading
+            resultsDiv.innerHTML = '<div class="loading">Loading weather data...</div>';
+            resultsDiv.style.display = 'block';
+            
+            try {
+                // Get weather forecast
+                const forecast = await getWeatherForecast(location);
+                
+                // Get wardrobe items (custom or default)
+                const wardrobe = getWardrobeItems(dressCode);
+                
+                // Generate outfits
+                const outfits = generateOutfits(forecast, wardrobe);
+                
+                // Display results
+                displayResults(outfits);
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}<br><br>If this persists, your API key might still be activating (takes ~10 minutes after signup).</div>`;
+            }
+        });
+        
+        // WEATHER API FUNCTIONS
+        async function getWeatherForecast(location) {
+            // Get 5-day forecast using city name
+            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${location}&appid=${API_KEY}&units=metric`;
+            const forecastResponse = await fetch(forecastUrl);
+            
+            if (!forecastResponse.ok) {
+                throw new Error('Could not fetch weather forecast. Check your internet connection.');
+            }
+            
+            const forecastData = await forecastResponse.json();
+            
+            // Process forecast into daily summaries (next 5 days)
+            return processForecastData(forecastData);
+        }
+        
+        function processForecastData(data) {
+            const dailyForecasts = [];
+            
+            // Group by date and get one forecast per day (around midday)
+            const forecastsByDay = {};
+            
+            data.list.forEach(item => {
+                const date = new Date(item.dt * 1000);
+                const dateKey = date.toLocaleDateString('en-AU');
+                const hour = date.getHours();
+                
+                // Only use forecasts around midday (10am-2pm) for better accuracy
+                if (hour >= 10 && hour <= 14) {
+                    if (!forecastsByDay[dateKey]) {
+                        forecastsByDay[dateKey] = item;
+                    }
+                }
+            });
+            
+            // Get next 5 days
+            const dates = Object.keys(forecastsByDay).slice(0, 5);
+            
+            dates.forEach(dateKey => {
+                const item = forecastsByDay[dateKey];
+                const date = new Date(item.dt * 1000);
+                
+                dailyForecasts.push({
+                    date: date,
+                    dayName: date.toLocaleDateString('en-AU', { weekday: 'long' }),
+                    temp: Math.round(item.main.temp),
+                    tempMin: Math.round(item.main.temp_min),
+                    tempMax: Math.round(item.main.temp_max),
+                    description: item.weather[0].description,
+                    rain: item.rain ? (item.rain['3h'] || 0) : 0,
+                    rainProbability: item.pop * 100 // probability of precipitation
+                });
+            });
+            
+            return dailyForecasts;
+        }
+        
+        // WARDROBE MANAGEMENT
+        function getWardrobeItems(dressCode) {
+            const customTops = document.getElementById('customTops').value;
+            const customBottoms = document.getElementById('customBottoms').value;
+            const customLayers = document.getElementById('customLayers').value;
+            const customOuterwear = document.getElementById('customOuterwear').value;
+            
+            const wardrobe = {
+                tops: parseCustomItems(customTops) || defaultWardrobes[dressCode].tops,
+                bottoms: parseCustomItems(customBottoms) || defaultWardrobes[dressCode].bottoms,
+                layers: parseCustomItems(customLayers) || defaultWardrobes[dressCode].layers,
+                outerwear: parseCustomItems(customOuterwear) || defaultWardrobes[dressCode].outerwear
+            };
+            
+            return wardrobe;
+        }
+        
+        function parseCustomItems(input) {
+            if (!input.trim()) return null;
+            return input.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        }
+        
+        // OUTFIT GENERATION LOGIC
+        function generateOutfits(forecast, wardrobe) {
+            const outfits = [];
+            
+            forecast.forEach((day, index) => {
+                const outfit = {
+                    day: day.dayName,
+                    date: day.date.toLocaleDateString('en-AU'),
+                    weather: {
+                        temp: day.temp,
+                        tempMin: day.tempMin,
+                        tempMax: day.tempMax,
+                        description: day.description,
+                        rainProbability: Math.round(day.rainProbability)
+                    },
+                    items: []
+                };
+                
+                // TOP: Different each day, cycle through available tops
+                const topIndex = index % wardrobe.tops.length;
+                outfit.items.push({ type: 'Top', item: wardrobe.tops[topIndex] });
+                
+                // BOTTOM: Can repeat, choose based on formality
+                const bottomIndex = Math.floor(index / 2) % wardrobe.bottoms.length;
+                outfit.items.push({ type: 'Bottom', item: wardrobe.bottoms[bottomIndex] });
+                
+                // LAYER: Add if temp is below 20°C
+                if (day.temp < 20) {
+                    const layerIndex = index % wardrobe.layers.length;
+                    outfit.items.push({ type: 'Layer', item: wardrobe.layers[layerIndex] });
+                }
+                
+                // OUTERWEAR: Add if temp is below 15°C or high rain probability
+                if (day.temp < 15 || day.rainProbability > 60) {
+                    // Prefer raincoat if raining
+                    if (day.rainProbability > 60) {
+                        const raincoat = wardrobe.outerwear.find(item => 
+                            item.toLowerCase().includes('rain')
+                        );
+                        outfit.items.push({ 
+                            type: 'Outerwear', 
+                            item: raincoat || wardrobe.outerwear[0] 
+                        });
+                    } else {
+                        outfit.items.push({ 
+                            type: 'Outerwear', 
+                            item: wardrobe.outerwear[0] 
+                        });
+                    }
+                }
+                
+                outfits.push(outfit);
+            });
+            
+            return outfits;
+        }
+        
+        // DISPLAY RESULTS
+        function displayResults(outfits) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = '<h2>Your 5-Day Wardrobe</h2>';
+            
+            outfits.forEach(outfit => {
+                html += `
+                    <div class="day-card">
+                        <div class="day-header">${outfit.day} - ${outfit.date}</div>
+                        <div class="weather-info">
+                            🌡️ ${outfit.weather.temp}°C (${outfit.weather.tempMin}-${outfit.weather.tempMax}°C) 
+                            | ${outfit.weather.description}
+                            | 💧 ${outfit.weather.rainProbability}% rain
+                        </div>
+                        <div class="outfit-section">
+                `;
+                
+                outfit.items.forEach(item => {
+                    html += `<div><strong>${item.type}:</strong> <span class="outfit-item">${item.item}</span></div>`;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
